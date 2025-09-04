@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор матриц</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #example-line {
+      font-family: 'Courier New', monospace;
+      font-size: 1.3em;
+      margin: 20px 0;
+      background: #fff;
+      padding: 10px;
+      border-left: 4px solid #007BFF;
+    }
+
+    #chain-container .element {
+      background: #fff;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      padding: 10px;
+    }
+
+    .element-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .element-body {
+      margin-top: 10px;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      text-align: center;
+    }
+
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    select {
+      font-size: 14px;
+    }
+
+    #result {
+      margin-top: 20px;
+      white-space: pre;
+      font-family: monospace;
+      font-size: 1.1em;
+      background: #eee;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Калькулятор матриц</h1>
+
+  <div id="example-line"></div>
+
+  <div id="chain-container"></div>
+
+  <button id="add-new-element-btn">➕ Добавить элемент</button>
+  <button id="calculate-btn">🧮 Рассчитать</button>
+
+  <div id="result"></div>
+
+  <!-- Шаблон элемента -->
+  <template id="element-template">
+    <div class="element">
+      <div class="element-header">
+        <strong class="element-name"></strong>
+        <select class="operation-select">
+          <option value="+">+</option>
+          <option value="-">−</option>
+          <option value="*">*</option>
+          <option value="/">/</option>
+          <option value="^">^</option>
+        </select>
+        <button class="remove-element-btn">❌</button>
+      </div>
+      <div class="element-body"></div>
+    </div>
+  </template>
+
+  <!-- Шаблон ввода матрицы -->
+  <template id="matrix-input-template">
+    <div>
+      <label>Строки: <input type="number" class="matrix-rows" value="2" min="1"></label>
+      <label>Столбцы: <input type="number" class="matrix-cols" value="2" min="1"></label>
+      <div class="matrix-cells"></div>
+    </div>
+  </template>
+
+  <!-- Шаблон ввода скаляра -->
+  <template id="scalar-input-template">
+    <div>
+      <label>Значение: <input type="text" class="scalar-value" value="1"></label>
+    </div>
+  </template>
+
+  <script src="static/script.js"></script>
+</body>
+</html>
