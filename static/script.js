@@ -1,11 +1,12 @@
+// Подключаем элементы DOM
 const chainContainer = document.getElementById("chain-container");
 const exampleLine = document.getElementById("example-line");
 const addBtn = document.getElementById("add-new-element-btn");
 const calcBtn = document.getElementById("calculate-btn");
 const resultDiv = document.getElementById("result");
-
 const elementTemplate = document.getElementById("element-template");
 
+// Список элементов выражения
 const elements = [];
 
 function renderChain() {
@@ -72,6 +73,7 @@ function renderFormula() {
   exampleLine.textContent = str + " =";
 }
 
+// Добавление элемента
 addBtn.onclick = () => {
   const name = prompt("Имя элемента (например, A, B, k):", "A");
   if (!name) return;
@@ -118,21 +120,136 @@ addBtn.onclick = () => {
   renderFormula();
 };
 
-calcBtn.onclick = async () => {
-  const res = await fetch("/calculate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ elements })
-  });
+// =======================
+// Расчёт локально в JS
+// =======================
 
-  const json = await res.json();
-  if (json.error) {
-    resultDiv.textContent = "Ошибка: " + json.error;
-  } else {
-    if (typeof json.result === "string") {
-      resultDiv.textContent = json.result;
-    } else {
-      resultDiv.innerHTML = json.result.map(row => row.join(" ")).join("\n");
+function parseFractionMatrix(data) {
+  return data.map(row => row.map(cell => new Fraction(cell)));
+}
+
+function matrixAdd(A, B) {
+  if (A.length !== B.length || A[0].length !== B[0].length)
+    throw new Error("Размерности для сложения должны совпадать.");
+  return A.map((row, i) => row.map((val, j) => val.add(B[i][j])));
+}
+
+function matrixSub(A, B) {
+  if (A.length !== B.length || A[0].length !== B[0].length)
+    throw new Error("Размерности для вычитания должны совпадать.");
+  return A.map((row, i) => row.map((val, j) => val.sub(B[i][j])));
+}
+
+function matrixMul(A, B) {
+  if (Array.isArray(B)) {
+    // Матрица * матрица
+    if (A[0].length !== B.length)
+      throw new Error("Размерности для умножения несовместимы.");
+    const result = Array.from({ length: A.length }, () =>
+      Array.from({ length: B[0].length }, () => new Fraction(0))
+    );
+    for (let i = 0; i < A.length; i++) {
+      for (let j = 0; j < B[0].length; j++) {
+        for (let k = 0; k < A[0].length; k++) {
+          result[i][j] = result[i][j].add(A[i][k].mul(B[k][j]));
+        }
+      }
     }
+    return result;
+  } else {
+    // Матрица * скаляр
+    return A.map(row => row.map(val => val.mul(B)));
+  }
+}
+
+function matrixDiv(A, B) {
+  if (B.valueOf() === 0) throw new Error("Деление на ноль.");
+  return A.map(row => row.map(val => val.div(B)));
+}
+
+function matrixPow(A, power) {
+  if (A.length !== A[0].length)
+    throw new Error("Матрица должна быть квадратной для возведения в степень.");
+
+  let result = A.map((row, i) =>
+    row.map((val, j) => (i === j ? new Fraction(1) : new Fraction(0)))
+  );
+
+  for (let p = 0; p < power; p++) {
+    result = matrixMul(result, A);
+  }
+  return result;
+}
+
+function applyOperation(acc, elem, op) {
+  switch (op) {
+    case "+":
+      return matrixAdd(acc, elem);
+    case "-":
+      return matrixSub(acc, elem);
+    case "*":
+      return matrixMul(acc, elem);
+    case "/":
+      return matrixDiv(acc, elem);
+    case "^":
+      if (typeof elem !== "number") throw new Error("Степень должна быть числом.");
+      return matrixPow(acc, elem);
+    default:
+      throw new Error("Неизвестная операция: " + op);
+  }
+}
+
+function calculateLocally(elements) {
+  if (elements.length === 0) throw new Error("Нет элементов.");
+
+  let acc;
+  const first = elements[0];
+
+  if (first.type === "matrix") {
+    acc = parseFractionMatrix(first.data);
+  } else if (first.type === "scalar") {
+    acc = new Fraction(first.data);
+  } else {
+    throw new Error("Неизвестный тип элемента.");
+  }
+
+  for (let i = 1; i < elements.length; i++) {
+    const el = elements[i];
+    const op = el.operation;
+    if (!op) throw new Error("Операция не указана.");
+
+    let operand;
+
+    if (el.type === "matrix") {
+      operand = parseFractionMatrix(el.data);
+      if (op === "^") throw new Error("Нельзя возводить в степень матрицу.");
+    } else if (el.type === "scalar") {
+      operand = new Fraction(el.data);
+      if (!["*", "/", "^"].includes(op))
+        throw new Error(`Операция '${op}' недоступна для скаляров.`);
+      if (op === "^") operand = operand.valueOf(); // Fraction to number
+    } else {
+      throw new Error("Неизвестный тип элемента.");
+    }
+
+    acc = applyOperation(acc, operand, op);
+  }
+
+  return acc;
+}
+
+// Кнопка "Посчитать"
+calcBtn.onclick = () => {
+  try {
+    const result = calculateLocally(elements);
+    if (result instanceof Fraction) {
+      resultDiv.textContent = result.toFraction();
+    } else {
+      resultDiv.innerHTML = result
+        .map(row => row.map(cell => cell.toFraction()).join(" "))
+        .join("\n");
+    }
+  } catch (e) {
+    resultDiv.textContent = "Ошибка: " + e.message;
   }
 };
