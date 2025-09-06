@@ -382,6 +382,58 @@ calcBtn.onclick = () => {
   }
 };
 
+// Вспомогательная функция: Minor матрицы
+function getSubMatrix(matrix, excludeRow, excludeCol) {
+  return matrix
+    .filter((_, rowIndex) => rowIndex !== excludeRow)
+    .map(row => row.filter((_, colIndex) => colIndex !== excludeCol));
+}
+
+// Рекурсивная функция: определитель с разложением по первой строке
+function calculateDeterminant(matrix) {
+  const n = matrix.length;
+
+  if (n === 1) return matrix[0][0];
+  if (n === 2) {
+    return matrix[0][0].mul(matrix[1][1]).sub(matrix[0][1].mul(matrix[1][0]));
+  }
+
+  let det = new Fraction(0);
+  for (let col = 0; col < n; col++) {
+    const cofactor = ((col % 2 === 0) ? new Fraction(1) : new Fraction(-1)).mul(matrix[0][col]);
+    const minor = getSubMatrix(matrix, 0, col);
+    det = det.add(cofactor.mul(calculateDeterminant(minor)));
+  }
+  return det;
+}
+
+// Обработка клика на кнопку 📐 "Определитель"
+document.addEventListener("click", function (event) {
+  if (event.target.classList.contains("determinant-btn")) {
+    const elementDiv = event.target.closest(".element");
+    const index = Array.from(chainContainer.children).indexOf(elementDiv);
+    const el = elements[index];
+
+    if (!el || el.type !== "matrix") {
+      alert("Определитель можно вычислить только для матриц.");
+      return;
+    }
+
+    const matrix = el.data;
+    if (matrix.length !== matrix[0].length) {
+      alert("Матрица должна быть квадратной.");
+      return;
+    }
+
+    try {
+      const det = calculateDeterminant(matrix);
+      alert(`Определитель матрицы ${el.name || "#" + (index + 1)}: ${det.toString()}`);
+    } catch (e) {
+      alert("Ошибка при вычислении определителя: " + e.message);
+    }
+  }
+});
+
 // Инициализация
 renderChain();
 renderFormula();
