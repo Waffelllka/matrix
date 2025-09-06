@@ -32,9 +32,11 @@
 
     .element-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: flex-start; /* Раньше было space-between */
+      gap: 8px; /* Добавляет отступ между элементами */
     }
+
 
     .element-body {
       margin-top: 10px;
@@ -84,21 +86,22 @@
 
   <!-- Шаблон элемента -->
   <template id="element-template">
-    <div class="element">
-      <div class="element-header">
-        <strong class="element-name"></strong>
-        <select class="operation-select">
-          <option value="+">+</option>
-          <option value="-">−</option>
-          <option value="*">*</option>
-          <option value="/">/</option>
-          <option value="^">^</option>
-        </select>
-        <button class="remove-element-btn">❌</button>
-      </div>
-      <div class="element-body"></div>
+  <div class="element">
+    <div class="element-header">
+      <strong class="element-name"></strong>
+      <select class="operation-select">
+        <option value="+">+</option>
+        <option value="-">−</option>
+        <option value="*">*</option>
+        <option value="/">/</option>
+        <option value="^">^</option>
+      </select>
+      <button class="determinant-btn" title="Вычислить определитель">📐</button>
+      <button class="remove-element-btn" title="Удалить элемент">❌</button>
     </div>
-  </template>
+    <div class="element-body"></div>
+  </div>
+</template>
 
   <!-- Шаблон ввода матрицы -->
   <template id="matrix-input-template">
